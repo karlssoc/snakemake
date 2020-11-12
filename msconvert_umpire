@@ -1,0 +1,19 @@
+run, = glob_wildcards("mzml/{run}.mzML")
+
+
+rule all:
+    input:
+        expand("umpire_mgf/{run}.mgf", run=run)
+
+
+rule msconvert_umpire:
+    input:
+        mzML="mzml/{run}.mzML"
+    output:
+        mgf="umpire_mgf/{run}.mgf"
+    threads: 4
+    shell:
+        "export LC_ALL=C && "
+        "/home/karlssoc/bin/pwiz/msconvert {input.mzML} "
+        "-c /home/karlssoc/ms/msconvert/msconvert_umpire_mgf_config.txt "
+        "-o umpire_mgf"
