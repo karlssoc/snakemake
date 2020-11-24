@@ -1,19 +1,28 @@
-run, = glob_wildcards("mzml/{run}.mzML")
+run, = glob_wildcards("raw/{run}.mzML")
 
 
 rule all:
     input:
-        expand("umpire_mgf/{run}.mgf", run=run)
+        expand("umpire_mzML/{run}.umpire.mzML", run=run)
+
+rule thermorawfileparser
+    input:
+        raw = "raw/{run}.raw"
+    output:
+       mzML = "mzML/{run}.mzML"
+    threads: 2
+    shell:
+        "mono ~/bin/ThermoRawFileParser/ThermoRawFileParser.exe -i {input.raw} -f 2 --output_file {output.mzML}"
+
 
 
 rule msconvert_umpire:
     input:
         mzML="mzml/{run}.mzML"
     output:
-        mgf="umpire_mgf/{run}.mgf"
+        umpire.mzML="umpire_mzML/{run}.umpire.mzML"
     threads: 4
     shell:
-        "export LC_ALL=C && "
-        "/home/karlssoc/bin/pwiz/msconvert {input.mzML} "
-        "-c /home/karlssoc/ms/msconvert/msconvert_umpire_mgf_config.txt "
-        "-o umpire_mgf"
+        "/home/karlssoc/bin/msconvert {input.mzML} "
+        "-c home/karlssoc/ms/msconvert/msconvert_umpire_mzML"
+        "--outfile {output.umpire.mzML}"
