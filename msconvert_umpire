@@ -1,4 +1,4 @@
-run, = glob_wildcards("raw/{run}.mzML")
+run, = glob_wildcards("raw/{run}.raw")
 
 
 rule all:
@@ -20,9 +20,9 @@ rule msconvert_umpire:
     input:
         mzML="mzml/{run}.mzML"
     output:
-        umpire.mzML="umpire_mzML/{run}.umpire.mzML"
+        umpire="umpire_mzML/{run}.umpire.mzML"
     threads: 4
     shell:
         "/home/karlssoc/bin/msconvert {input.mzML} "
         "-c home/karlssoc/ms/msconvert/msconvert_umpire_mzML"
-        "--outfile {output.umpire.mzML}"
+        "--outfile {output.umpire}"
