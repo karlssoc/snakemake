@@ -3,9 +3,9 @@ run, = glob_wildcards("raw/{run}.raw")
 
 rule all:
     input:
-        expand("umpire_mzML/{run}.umpire.mzML", run=run)
+        expand("umpire_mzML/{run}.mzML", run=run)
 
-rule thermorawfileparser
+rule thermorawfileparser:
     input:
         raw = "raw/{run}.raw"
     output:
@@ -18,11 +18,11 @@ rule thermorawfileparser
 
 rule msconvert_umpire:
     input:
-        mzML="mzml/{run}.mzML"
+        mzML="mzML/{run}.mzML"
     output:
-        umpire="umpire_mzML/{run}.umpire.mzML"
-    threads: 4
+        umpire="umpire_mzML/{run}.mzML"
+    threads: 8
     shell:
-        "/home/karlssoc/bin/msconvert {input.mzML} "
-        "-c home/karlssoc/ms/msconvert/msconvert_umpire_mzML"
-        "--outfile {output.umpire}"
+        "/home/karlssoc/bin/msconvert {input.mzML} --mzML "
+        "-c /home/karlssoc/ms/msconvert/msconvert_umpire_mzML "
+        "--outdir ./umpire_mzML/"
