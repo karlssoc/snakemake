@@ -1,0 +1,19 @@
+run, = glob_wildcards("mzML/{run}.mzML")
+
+
+rule all:
+    input:
+        expand("easyqpq/{run}.peakpkl", run=run)
+
+
+
+rule :
+    input:
+        mzML = "mzML/{run}.mzML",
+        xml =  "mzML/interact-{run}.pep.xml"
+    output:
+       peakpkl = "easyqpq/{run}.peakpkl",
+       psmpkl = "easyqpq/{run}.psmpkl"
+    threads: 7
+    shell:
+        "/home/karlssoc/miniconda3/envs/easypqp/bin/easypqp convert --pepxml {input.xml} --spectra {input.mzML}  --exclude-range -1.5,3.5 --psms {output.psmpkl}  --peaks {output.peakpkl}  --enable_specific_losses"
