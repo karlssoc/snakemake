@@ -50,7 +50,7 @@ rule PyprophetScore:
     threads: 6
     shell: "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet score --in={input.osw} --level=ms2 --out {output.osws} && "
            "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet score --threads = 12 --in={input.osw} --level=ms1 --out {output.osws} && "
-           "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet peptide --in={output.osws} --context=run-specific peptide --in={output.osws} --context=experiment-wide peptide --in={output.osws} --context=global"
+           "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet peptide --in={output.osws} --context=run-specific peptide --in={output.osws} --context=experiment-wide peptide --in={output.osws} --context=global && "
            "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet protein --in={output.osws} --context=run-specific peptide --in={output.osws} --context=experiment-wide peptide --in={output.osws} --context=global"
 
 
