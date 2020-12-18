@@ -1,0 +1,74 @@
+lib, = glob_wildcards("pqp/{lib}.PQP")
+run, = glob_wildcards("mzML/{run}.mzML")
+
+rule all:
+    input:
+       expand("osw/{lib}/merged.osw", lib=lib),
+       expand("osw/{lib}/tric.tsv", lib=lib)
+
+rule OpenSwathWorkflow:
+    input:
+        mzML = "mzML/{run}.mzML",
+        PQP = "pqp/{lib}.PQP"
+    output:
+       osw = "osw/{lib}/{run}.osw"
+    threads: 12
+    shell: "OpenSwathWorkflow "
+           "-swath_windows_file bruduer_HFX_44win.txt "
+           "-in {input.mzML} "
+           "-tr_irt hroest_DIA_iRT.TraML "
+           "-tr {input.PQP} "
+           "-readOptions workingInMemory "
+           "-sort_swath_maps "
+           "-out_osw {output.osw} "
+           "-rt_extraction_window 600 "
+           "-mz_extraction_window 20 -ppm "
+           "-threads 12  "
+           "-use_ms1_traces "
+           "-mz_correction_function quadratic_regression_delta_ppm "
+           "-Scoring:TransitionGroupPicker:background_subtraction exact "
+           "-batchSize 5000 "
+
+
+
+rule PyprophetMerge:
+    input:
+        osw = lambda wildcards: expand("osw/{{lib}}/{run}.osw", run=run),
+        PQP = "pqp/{lib}.PQP"
+    output:
+        "osw/{lib}/merged.osw"
+    threads: 12
+    shell: "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet merge --template={input.PQP} --out= {output} {input.osw}"
+
+
+
+rule PyprophetScore:
+    input:
+        osw = "osw/{lib}/merged.osw"
+    output:
+        osws = "osw/{lib}/merged.osws"
+    threads: 6
+    shell: "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet score --in={input.osw} --level=ms2 --out {output.osws} && "
+           "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet score --threads = 12 --in={input.osw} --level=ms1 --out {output.osws} && "
+           "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet peptide --in={output.osws} --context=run-specific peptide --in={output.osws} --context=experiment-wide peptide --in={output.osws} --context=global"
+           "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet protein --in={output.osws} --context=run-specific peptide --in={output.osws} --context=experiment-wide peptide --in={output.osws} --context=global"
+
+
+rule PyprophetExport:
+    input:
+        osws =  "osw/{lib}/merged.osws"
+    output:
+        tsv = "osw/{lib}/pyprophet.tsv"
+    threads: 6
+    shell: "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet export --in= {input.osws} --out={output.tsv}"
+
+rule TricAlignment:
+    input:
+        tsv =  "osw/{lib}/pyprophet.tsv"
+    output:
+        tsv = "osw/{lib}/tric.tsv"
+    threads: 4
+    shell: "/home/karlssoc/miniconda3/envs/pyprophet/bin/feature_alignment.py --in {input.tsv} --out {output.tsv} "
+           "--method LocalMST --realign_method lowess_cython --max_rt_diff 60 "
+           "--mst:useRTCorrection True --mst:Stdev_multiplier 3.0 "
+           "--target_fdr 0.01 --max_fdr_quality 0.05"
