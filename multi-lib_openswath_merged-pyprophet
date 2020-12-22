@@ -36,7 +36,7 @@ rule PyprophetMerge:
         osw = lambda wildcards: expand("osw/{{lib}}/{run}.osw", run=run),
         PQP = "pqp/{lib}.PQP"
     output:
-        "osw/{lib}/merged.osw"
+        osw = "osw/{lib}/merged.osw"
     threads: 12
     shell: "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet merge --template={input.PQP} --out={output} {input.osw} && "
            "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet score --threads=12 --in={output.osw} --level=ms2 && "
