@@ -54,11 +54,11 @@ rule PyprophetScore:
 
 rule PyprophetExport:
     input:
-        osws =  "osw/{lib}/merged.osws"
+        osw =  "osw/{lib}/merged.osw"
     output:
         tsv = "osw/{lib}/pyprophet.tsv"
     threads: 6
-    shell: "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet export --in= {input.osws} --out={output.tsv}"
+    shell: "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet export --in={input.osw} --out={output.tsv} --format legacy_merged"
 
 rule TricAlignment:
     input:
