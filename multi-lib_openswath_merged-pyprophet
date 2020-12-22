@@ -31,7 +31,7 @@ rule OpenSwathWorkflow:
 
 
 
-rule PyprophetMerge:
+rule PyprophetMergeScore:
     input:
         osw = lambda wildcards: expand("osw/{{lib}}/{run}.osw", run=run),
         PQP = "pqp/{lib}.PQP"
