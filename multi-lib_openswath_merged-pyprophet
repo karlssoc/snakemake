@@ -38,20 +38,20 @@ rule PyprophetMerge:
     output:
         "osw/{lib}/merged.osw"
     threads: 12
-    shell: "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet merge --template={input.PQP} --out={output} {input.osw}"
+    shell: "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet merge --threads=12 --template={input.PQP} --out={output} {input.osw}"
 
 
 
 rule PyprophetScore:
     input:
         osw = "osw/{lib}/merged.osw"
-    output:
-        osws = "osw/{lib}/merged.osws"
+    #output:
+    #    osws = "osw/{lib}/merged.osws"
     threads: 6
-    shell: "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet score --in={input.osw} --level=ms2 --out {output.osws} && "
-           "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet score --threads = 12 --in={input.osw} --level=ms1 --out {output.osws} && "
-           "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet peptide --in={output.osws} --context=run-specific peptide --in={output.osws} --context=experiment-wide peptide --in={output.osws} --context=global && "
-           "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet protein --in={output.osws} --context=run-specific peptide --in={output.osws} --context=experiment-wide peptide --in={output.osws} --context=global"
+    shell: "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet score --threads=12 --in={input.osw} --level=ms2 && "
+           "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet score --threads=12 --in={input.osw} --level=ms1 && "
+           "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet peptide --in={input.osw} --context=run-specific peptide --in={input.osw} --context=experiment-wide peptide --in={input.osw} --context=global && "
+           "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet protein --in={input.osw} --context=run-specific protein --in={input.osw} --context=experiment-wide protein --in={input.osw} --context=global"
 
 
 rule PyprophetExport:
