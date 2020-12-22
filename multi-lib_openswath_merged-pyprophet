@@ -38,7 +38,7 @@ rule PyprophetMerge:
     output:
         "osw/{lib}/merged.osw"
     threads: 12
-    shell: "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet merge --template={input.PQP} --out= {output} {input.osw}"
+    shell: "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet merge --template={input.PQP} --out={output} {input.osw}"
 
 
 
