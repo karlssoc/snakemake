@@ -38,7 +38,7 @@ rule PyprophetMergeScore:
     output:
         osw = "osw/{lib}/merged.osw"
     threads: 12
-    shell: "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet merge --template={input.PQP} --out={output} {input.osw} && "
+    shell: "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet merge --template={input.PQP} --out={output.osw} {input.osw} && "
            "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet score --threads=12 --in={output.osw} --level=ms2 && "
            "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet score --threads=12 --in={output.osw} --level=ms1 && "
            "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet peptide --in={output.osw} --context=run-specific peptide --in={output.osw} --context=experiment-wide peptide --in={output.osw} --context=global && "
