@@ -45,6 +45,8 @@ rule PyprophetMerge:
 rule PyprophetScore:
     input:
         osw = "osw/{lib}/merged.osw"
+    output:
+       "osw/{lib}/merged.osw"
     threads: 12
     shell: "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet score --threads=12 --in={input.osw} --level=ms2 && "
            "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet score --threads=12 --in={input.osw} --level=ms1 && "
