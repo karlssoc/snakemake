@@ -3,7 +3,34 @@ run, = glob_wildcards("mzml/{run}.mzML")
 
 rule all:
     input:
-       expand("osw_merge/{lib}.tric.tsv", lib=lib),
+       expand("osw/{lib}.{run}.osw", lib=lib, run=run),
+       expand("osw_merge/{lib}.pyprophet.tsv", lib=lib),
+       expand("osw_merge/{lib}.pyprophet-matrix.10p.tsv", lib=lib),
+       expand("osw_merge/{lib}.tric.tsv", lib=lib)
+
+rule OpenSwathWorkflow:
+    input:
+        mzML = "mzml/{run}.mzML",
+	traML = "tr/{lib}.traML",
+        PQP = "pqp/{lib}.PQP"
+    output:
+       osw = "osw/{lib}.{run}.osw"
+    threads: 6
+    shell: "OpenSwathWorkflow "
+           "-swath_windows_file osw_param/bruduer_HFX_44win.txt "
+           "-in {input.mzML} "
+           "-tr_irt {input.traML} "
+           "-tr {input.PQP} "
+           "-readOptions workingInMemory "
+           "-sort_swath_maps "
+           "-out_osw {output.osw} "
+           "-rt_extraction_window 600 "
+           "-mz_extraction_window 20 -ppm "
+           "-threads 8  "
+           "-use_ms1_traces "
+           "-mz_correction_function quadratic_regression_delta_ppm "
+           "-Scoring:TransitionGroupPicker:background_subtraction exact "
+           "-batchSize 5000 "
 
 
 rule PyprophetMerge:
@@ -23,56 +50,27 @@ rule PyprophetExport:
     input:
         osw =  "osw_merge/{lib}.merged.osw"
     output:
-        tsv = "osw_merge/{lib}.pyprophet.tsv"
+        tsv = "osw_merge/{lib}.pyprophet.tsv",
+	tsv2 = "osw_merge/{lib}.pyprophet-matrix.tsv",
     threads: 12
-    shell: "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet export --in={input.osw} --out={output.tsv} --format legacy_merged"
-
-rule TricAlignment:
-    input:
-        tsv =  "osw_merge/{lib}.pyprophet.tsv"
-    output:
-        tsv = "osw_merge/{lib}.tric.tsv"
-    threads: 12
-    shell: "/home/karlssoc/miniconda3/envs/pyprophet/bin/feature_alignment.py --in {input.tsv} --out {output.tsv} "
-           "--method LocalMST --realign_method lowess_cython --max_rt_diff 60 "
-           "--mst:useRTCorrection True --mst:Stdev_multiplier 3.0 "
-           "--target_fdr 0.01 --max_fdr_quality 0.05"
-(snakemake) karlssoc@jmskeletor:~/projects/mslibrarian/libs_210121$ cat osw_merge_score_tric.smk
-lib, = glob_wildcards("pqp/{lib}.PQP")
-run, = glob_wildcards("mzml/{run}.mzML")
-
-rule all:
-    input:
-       expand("osw_merge/{lib}.tric.tsv", lib=lib),
+    shell: "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet export --in={input.osw} --out={output.tsv} --format legacy_merged && "
+           "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet export --in={input.osw} --out={output.tsv2} --format matrix "
 
 
-rule PyprophetMerge:
-    input:
-        osw = lambda wildcards: expand("osw/{{lib}}.{run}.osw", run=run),
-	PQP = "pqp/{lib}.PQP"
-    output:
-        osw = "osw_merge/{lib}.merged.osw"
-    threads: 12
-    shell: "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet merge --template={input.PQP} --out={output} {input.osw} && "
-           "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet score --threads=12 --in={output.osw} --level=ms1ms2 && "
-           "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet peptide --in={output.osw} --context=run-specific peptide --in={output.osw} --context=experiment-wide peptide --in={output.osw} --context=global && "
-           "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet protein --in={output.osw} --context=run-specific protein --in={output.osw} --context=experiment-wide protein --in={output.osw} --context=global"
-
-
-rule PyprophetExport:
+rule PyprophetExportHighFDR:
     input:
         osw =  "osw_merge/{lib}.merged.osw"
     output:
-        tsv = "osw_merge/{lib}.pyprophet.tsv"
+        tsv3 = "osw_merge/{lib}.pyprophet-matrix.10p.tsv"
     threads: 12
-    shell: "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet export --in={input.osw} --out={output.tsv} --format legacy_merged"
+    shell:     "/home/karlssoc/miniconda3/envs/pyprophet/bin/pyprophet export --in={input.osw} --out={output.tsv3} --format matrix --max_global_peptide_qvalue 0.05 --max_global_protein_qvalue 0.10"
 
 rule TricAlignment:
     input:
         tsv =  "osw_merge/{lib}.pyprophet.tsv"
     output:
         tsv = "osw_merge/{lib}.tric.tsv"
-    threads: 12
+    threads: 4
     shell: "/home/karlssoc/miniconda3/envs/pyprophet/bin/feature_alignment.py --in {input.tsv} --out {output.tsv} "
            "--method LocalMST --realign_method lowess_cython --max_rt_diff 60 "
            "--mst:useRTCorrection True --mst:Stdev_multiplier 3.0 "
